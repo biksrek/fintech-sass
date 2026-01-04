@@ -11,6 +11,7 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  Cell,
 } from "recharts";
 import api from "../api/axios";
 import AddTransactionForm from "../components/AddTransactionForm";
@@ -55,7 +56,7 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         {[
           {
             label: "Total Income",
@@ -87,51 +88,56 @@ const Dashboard: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
-            className="glass p-6 rounded-2xl border border-white/5 relative overflow-hidden group"
+            className="glass p-3 rounded-xl border border-white/5 flex items-center justify-between group hover:bg-white/5 transition-colors"
           >
-            <div
-              className={`absolute top-0 right-0 p-4 opacity-50 transition-opacity group-hover:opacity-100`}
-            >
-              <div
-                className={`p-3 rounded-xl ${stat.bg} ${stat.border} border`}
-              >
-                <stat.icon className={stat.color} size={24} />
+            <div>
+              <p className="text-slate-400 text-xs font-medium">{stat.label}</p>
+              <div className="flex items-baseline gap-2 mt-0.5">
+                <h3 className="text-lg font-bold text-white">
+                  ${stat.amount.toLocaleString()}
+                </h3>
+                <span className="text-emerald-400 text-[10px] font-medium">
+                  +2.5%
+                </span>
               </div>
             </div>
-            <div>
-              <p className="text-slate-400 text-sm font-medium">{stat.label}</p>
-              <h3 className="text-2xl font-bold text-white mt-2">
-                ${stat.amount.toLocaleString()}
-              </h3>
-              <p className="text-xs text-slate-500 mt-2 flex items-center gap-1">
-                <span className="text-emerald-400 font-medium">+2.5%</span> from
-                last month
-              </p>
+            <div className={`p-2 rounded-lg ${stat.bg} ${stat.border} border`}>
+              <stat.icon className={stat.color} size={18} />
             </div>
-            <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
           </motion.div>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-0 pb-2">
         {/* Chart */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="lg:col-span-2 glass p-6 rounded-2xl border border-white/5"
+          className="lg:col-span-2 glass p-6 rounded-2xl border border-white/5 flex flex-col"
         >
-          <h3 className="text-lg font-bold text-white mb-6">
+          <h3 className="text-lg font-bold text-white mb-4">
             Activity Overview
           </h3>
-          <div className="h-80 w-full">
+          <div className="flex-1 w-full min-h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={[
                   { name: "Income", amount: stats?.income || 0 },
                   { name: "Expense", amount: stats?.expense || 0 },
                 ]}
+                margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
               >
+                <defs>
+                  <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#10b981" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="#10b981" stopOpacity={0.2} />
+                  </linearGradient>
+                  <linearGradient id="colorExpense" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#f43f5e" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="#f43f5e" stopOpacity={0.2} />
+                  </linearGradient>
+                </defs>
                 <CartesianGrid
                   strokeDasharray="3 3"
                   stroke="rgba(255,255,255,0.05)"
@@ -142,28 +148,44 @@ const Dashboard: React.FC = () => {
                   stroke="#94a3b8"
                   tickLine={false}
                   axisLine={false}
+                  fontSize={12}
+                  tickMargin={10}
                 />
                 <YAxis
                   stroke="#94a3b8"
                   tickLine={false}
                   axisLine={false}
                   tickFormatter={(value) => `$${value}`}
+                  fontSize={12}
                 />
                 <Tooltip
+                  cursor={{ fill: "rgba(255,255,255,0.05)" }}
                   contentStyle={{
-                    backgroundColor: "#0f172a",
+                    backgroundColor: "rgba(15, 23, 42, 0.9)",
                     border: "1px solid rgba(255,255,255,0.1)",
                     borderRadius: "12px",
+                    boxShadow:
+                      "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+                    padding: "12px",
                   }}
-                  itemStyle={{ color: "#e2e8f0" }}
-                  cursor={{ fill: "rgba(255,255,255,0.02)" }}
+                  itemStyle={{ color: "#fff", fontWeight: 600 }}
+                  labelStyle={{ color: "#94a3b8", marginBottom: "4px" }}
                 />
-                <Bar
-                  dataKey="amount"
-                  fill="#3b82f6"
-                  radius={[6, 6, 0, 0]}
-                  barSize={60}
-                />
+                <Bar dataKey="amount" radius={[8, 8, 0, 0]} barSize={60}>
+                  {[
+                    { name: "Income", amount: stats?.income || 0 },
+                    { name: "Expense", amount: stats?.expense || 0 },
+                  ].map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={
+                        entry.name === "Income"
+                          ? "url(#colorIncome)"
+                          : "url(#colorExpense)"
+                      }
+                    />
+                  ))}
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -174,7 +196,7 @@ const Dashboard: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="glass rounded-2xl border border-white/5 flex flex-col h-[450px]"
+          className="glass rounded-2xl border border-white/5 flex flex-col h-[400px] lg:h-full overflow-hidden"
         >
           <div className="p-6 border-b border-white/5 flex justify-between items-center">
             <h3 className="text-lg font-bold text-white">Recent Activity</h3>

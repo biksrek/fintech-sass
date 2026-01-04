@@ -10,15 +10,21 @@ import {
 } from "lucide-react";
 import api from "../api/axios";
 
-const fetchTransactions = async () => {
-  const { data } = await api.get("/transactions");
+const fetchTransactions = async (search: string) => {
+  const { data } = await api.get("/transactions", {
+    params: { search },
+  });
   return data;
 };
 
-const TransactionList: React.FC = () => {
+interface TransactionListProps {
+  search?: string;
+}
+
+const TransactionList: React.FC<TransactionListProps> = ({ search = "" }) => {
   const { data: transactions, isLoading } = useQuery({
-    queryKey: ["transactions"],
-    queryFn: fetchTransactions,
+    queryKey: ["transactions", search],
+    queryFn: () => fetchTransactions(search),
   });
   const queryClient = useQueryClient();
 

@@ -7,17 +7,34 @@ import Transaction from '../models/Transaction';
 // @access  Private
 export const getTransactions = async (req: Request, res: Response) => {
   try {
-    const { type, category, month, year } = req.query;
+    const { type, category, month, year, search } = req.query;
     const filter: any = { userId: (req as any).user._id };
 
     if (type) filter.type = type;
     if (category) filter.category = category; // Assuming exact match for now
+
+    if (search) {
+      const searchQuery = (search as string).trim();
+      if (searchQuery) {
+        // Escape special regex characters to prevent crashes/invalid patterns
+        const escapedSearch = searchQuery.replace(
+          /[.*+?^${}()|[\]\\]/g,
+          "\\$&"
+        );
+        const searchRegex = { $regex: escapedSearch, $options: "i" };
+
+        // Search in description and category
+        filter.$or = [{ description: searchRegex }, { category: searchRegex }];
+        console.log(`Searching for: "${searchQuery}"`, filter.$or);
+      }
+    }
 
     if (month && year) {
       // Filter by month/year logic
       // Assuming 'month' is 1-indexed (1=Jan)
       const startDate = new Date(Number(year), Number(month) - 1, 1);
       const endDate = new Date(Number(year), Number(month), 0); // Last day of month
+      // Merge date filter with existing filter if needed, though here it's clean
       filter.date = { $gte: startDate, $lt: endDate };
     }
 
